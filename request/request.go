@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -43,7 +42,7 @@ func (r *RequestClient) Get(ctx context.Context, path string, params url.Values,
 	})
 }
 
-func (r *RequestClient) Post(ctx context.Context, path string, data interface{}, target interface{}) (*request.Call, error) {
+func (r *RequestClient) Post(ctx context.Context, path string, data, target interface{}) (*request.Call, error) {
 	return r.doRequest(&apiRequest{
 		ctx:    ctx,
 		method: http.MethodPost,
@@ -65,14 +64,8 @@ func (r *RequestClient) Delete(ctx context.Context, path string, params url.Valu
 
 func (r *RequestClient) doRequest(req *apiRequest) (*request.Call, error) {
 
-	querystring := ""
-	if req.params != nil {
-		querystring = fmt.Sprintf("?%s", req.params.Encode())
-	}
-
 	// build full url
-	baseURL := fmt.Sprintf("%s", os.Getenv(config.BaseURL))
-	url := fmt.Sprintf("%s/%s%s", baseURL, req.path, querystring)
+	baseURL := fmt.Sprintf("%s", req.ctx.Value(config.BaseURL))
 
 	// create json payload
 	payload, err := json.Marshal(req.data)
@@ -81,12 +74,11 @@ func (r *RequestClient) doRequest(req *apiRequest) (*request.Call, error) {
 	}
 
 	// create request object
-	httpRequest, err := http.NewRequest(req.method, url, bytes.NewReader(payload))
+	httpRequest, err := http.NewRequest(req.method, baseURL, bytes.NewReader(payload))
 	if err != nil {
 		return nil, errors.Wrap(errors.WithStack(err), "failed to prepare request object")
 	}
 
-	//httpRequest.Header.Add("Authorization", fmt.Sprintf("TOKEN %s", req.ctx.Value(config.Token)))
 	if req.data != nil {
 		httpRequest.Header.Add("Content-Type", "application/json")
 	}

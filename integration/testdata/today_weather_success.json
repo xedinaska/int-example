@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "state_name": "sunny",
+  "min_temp": 10.00,
+  "max_temp": 12.30,
+  "humidity": 30,
+  "wind_speed": 22.1,
+  "visibility": 90.11
+}
